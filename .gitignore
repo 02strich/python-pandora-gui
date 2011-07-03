@@ -1,0 +1,3 @@
+*.pyc
+/build/
+/python_pandora_gui.egg-info/
