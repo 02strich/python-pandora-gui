@@ -9,14 +9,17 @@ from pandora.connection import AuthenticationError
 
 import urllib2
 import threading
+import time
 
 class WorkerThread(threading.Thread):
 	def __init__(self, app, pandora):
 		threading.Thread.__init__(self)
-		self.daemon = True
+		self.daemon  = True
 		self.app     = app
 		self.pandora = pandora
+		
 		self.stop    = False
+		self.next	 = False
 	
 	def run(self):
 		while not self.stop:
@@ -27,12 +30,28 @@ class WorkerThread(threading.Thread):
 				self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
 				song = self.pandora.getNextSong()
 			
-			# play next song
+			# call app
+			app.newSong(song)
+			
+			# create stream
 			handle = bass.BASS_StreamCreateURL(song['audioURL'], 0, bass.BASS_STREAM_AUTOFREE, bass.DOWNLOADPROC(), 0)
+			if handle == 0:
+				print bass.get_error_description(bass.BASS_ErrorGetCode())
+			
+			# play it
 			channel_length = bass.BASS_ChannelGetLength(handle, bass.BASS_POS_BYTE)
 			channel_position = bass.BASS_ChannelGetPosition(handle, bass.BASS_POS_BYTE)
-			bass.BASS_ChannelPlay(handle, False)
+			if not bass.BASS_ChannelPlay(handle, False):
+				print bass.get_error_description(bass.BASS_ErrorGetCode())
+			
+			# wait for it to end
 			while channel_position < channel_length:
+				# check whether we should continue
+				if self.stop or self.next:
+					bass.BASS_ChannelStop(handle)
+					self.next = False
+					break
+				
 				channel_position = bass.BASS_ChannelGetPosition(handle, bass.BASS_POS_BYTE)
 				time.sleep(1)
 			bass.BASS_StreamFree(handle)
@@ -40,11 +59,13 @@ class WorkerThread(threading.Thread):
 
 class Application(tk.Frame):
 	station = tk.StringVar()
+	old_volume = 0.5
 	
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
 		self.createWidgets()
 		self.initPandora()
+		self.initBass()
 	
 	def createWidgets(self):
 		self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
@@ -52,26 +73,25 @@ class Application(tk.Frame):
 		top.rowconfigure(0, weight=1)
 		top.columnconfigure(0, weight=1)
 		self.rowconfigure(1, weight=1)
-		self.columnconfigure(4, weight=1)
+		self.columnconfigure(3, weight=1)
 		self.master.title("Pandora")
+		self.master.geometry("300x150")
 		
 		# main buttons + station list
-		self.prevButton	= tk.Button(self, text='<<', command=self.prev)
-		self.playButton	= tk.Button(self, text='>', command=self.playPause)
-		self.stopButton	= tk.Button(self, text='[]', command=self.stop)
+		self.plStButton	= tk.Button(self, text='>', command=self.playStop)
 		self.nextButton	= tk.Button(self, text='>>', command=self.next)
 		self.quitButton	= tk.Button(self, text='Quit', command=self.quit)
+		self.muteButton = tk.Button(self, text='@', command=self.mute)
 		self.stationLst = tk.OptionMenu(self, self.station, [])
 		self.trackList	= tk.Listbox(self)
 				
 		# layout-ing
-		self.prevButton.grid(row=0, column=0)
-		self.playButton.grid(row=0, column=1)
-		self.stopButton.grid(row=0, column=2)
-		self.nextButton.grid(row=0, column=3)
-		self.stationLst.grid(row=0, column=4, sticky=tk.N+tk.S+tk.E+tk.W)
-		self.quitButton.grid(row=0, column=5)
-		self.trackList.grid(sticky=tk.N+tk.S+tk.E+tk.W, row=1, column=0, columnspan=6)
+		self.plStButton.grid(row=0, column=0)
+		self.nextButton.grid(row=0, column=1)
+		self.muteButton.grid(row=0, column=2)
+		self.stationLst.grid(row=0, column=3, sticky=tk.N+tk.S+tk.E+tk.W)
+		self.quitButton.grid(row=0, column=4)
+		self.trackList.grid(sticky=tk.N+tk.S+tk.E+tk.W, row=1, column=0, columnspan=5)
 	
 	def initPandora(self):
 		# setup proxy
@@ -94,23 +114,25 @@ class Application(tk.Frame):
 		# switch to first station
 		self.switchStation(self.stationCache[0]['stationName'], self.stationCache[0]['stationId'])
 	
-	def prev(self):
-		pass
-		
+	def initBass(self):
+		bass.BASS_Init(-1, 44100, 0, 0, 0)
+	
 	def next(self):
-		pass
+		self.worker.next = True
 	
-	def playPause(self):
-		self.worker = WorkerThread(self, self.pandora)
-		self.worker.start()
-	
-	def stop(self):
-		self.worker.stop = True
-		self.worker.join()
-	
-	def switchStation(self, stationName, stationId):
-		print stationName
+	def playStop(self):
+		if self.plStButton['text'] == '>':
+			# play
+			self.worker = WorkerThread(self, self.pandora)
+			self.worker.start()
+			self.plStButton['text'] = "[]"
+		else:
+			#stop
+			self.worker.stop = True
+			self.worker.join()
+			self.plStButton['text'] = ">"
 		
+	def switchStation(self, stationName, stationId):
 		# set value
 		self.stationLst.setvar(self.stationLst.cget("textvariable"), value=stationName)
 		
@@ -120,6 +142,19 @@ class Application(tk.Frame):
 		except AuthenticationError:
 			self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
 			self.pandora.switchStation(stationId)
+	
+	def mute(self):
+		if bass.BASS_GetVolume() == 0.0:
+			bass.BASS_SetVolume(self.old_volume)
+		else:
+			self.old_volume = bass.BASS_GetVolume()
+			bass.BASS_SetVolume(0.0)
+	
+	def newSong(self, song):
+		self.trackList.insert(tk.END, "%s (%s on %s)" % (song['songTitle'], song['artistSummary'], song['albumTitle']))
 
 app = Application()
 app.mainloop()
+
+# free bass
+bass.BASS_Free()
