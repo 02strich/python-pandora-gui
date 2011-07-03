@@ -1,8 +1,8 @@
 import Tkinter as tk
 root = tk.Tk()
 
-import bass.pybass as bass
-import config
+import pandora_gui.bass.pybass as bass
+from pandora_gui import config
 
 import pandora
 from pandora.connection import AuthenticationError
