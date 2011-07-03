@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+import sys
 
 try:
     import py2exe
@@ -23,3 +24,14 @@ setup(name='python-pandora-gui',
                 }
     },
 )
+
+# patch library.zip
+if sys.argv[1] == 'py2exe':    
+    from pandora import get_pkg_data_files
+    import zipfile
+    
+    z = zipfile.ZipFile("dist/library.zip", "a")
+    for pandora_data in get_pkg_data_files():
+        z.write(pandora_data[1], 'pandora/'+pandora_data[0])
+    z.close()
+    
