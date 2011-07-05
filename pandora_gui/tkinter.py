@@ -45,7 +45,7 @@ class WorkerThread(threading.Thread):
 				print bass.get_error_description(bass.BASS_ErrorGetCode())
 			
 			# wait for it to end
-			while channel_position < channel_length:
+			while (channel_position != -1) and (channel_position < channel_length):
 				# check whether we should continue
 				if self.stop or self.next:
 					bass.BASS_ChannelStop(handle)
@@ -151,7 +151,7 @@ class Application(tk.Frame):
 			bass.BASS_SetVolume(0.0)
 	
 	def newSong(self, song):
-		self.trackList.insert(tk.END, "%s (%s on %s)" % (song['songTitle'], song['artistSummary'], song['albumTitle']))
+		self.trackList.insert(0, "%s (%s on %s)" % (song['songTitle'], song['artistSummary'], song['albumTitle']))
 
 app = Application()
 app.mainloop()
