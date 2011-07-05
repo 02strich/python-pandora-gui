@@ -2,3 +2,5 @@
 /build/
 /python_pandora_gui.egg-info/
 /dist/
+
+.DS_Store
