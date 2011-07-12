@@ -59,7 +59,10 @@ if platform.system().lower() == 'windows':
 	bass_module = ctypes.WinDLL('bass')
 	func_type = ctypes.WINFUNCTYPE
 elif platform.system().lower() == 'darwin':
-	bass_module = ctypes.CDLL('libbass.dylib')
+	try:
+		bass_module = ctypes.CDLL('../Frameworks/libbass.dylib')
+	except:
+		bass_module = ctypes.CDLL('libbass.dylib')
 	func_type = ctypes.CFUNCTYPE
 else:
 	bass_module = ctypes.CDLL('bass')
