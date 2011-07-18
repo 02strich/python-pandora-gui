@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-
 import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
-import main_ui
+import pyside_main, pyside_settings
 
 import pandora_gui.bass.pybass as bass
 from pandora_gui import config, worker
@@ -86,15 +85,56 @@ class FormattedTextDelegate(QStyledItemDelegate):
 		painter.translate(-translation)
 	
 
-class Form(QDialog):
+class SettingsForm(QDialog):
+	settings = {}
+	
+	def __init__(self, parent=None):
+		super(SettingsForm, self).__init__(parent)
+		
+		# call designer code
+		self.ui = pyside_settings.Ui_Dialog()
+		self.ui.setupUi(self)
+		self.accepted.connect(self.saveSettings)
+		
+		# load settings
+		self.qsettings = QSettings("02strich", "python-pandora")
+		self.settings['PANDORA_USERNAME'] = self.qsettings.value("pandora/username", "")
+		self.settings['PANDORA_PASSWORD'] = self.qsettings.value("pandora/password", "")
+		self.settings['PANDORA_PROXY']    = self.qsettings.value("network/proxy", "")
+		
+		# display them
+		self.ui.txtUsername.setText(self.settings['PANDORA_USERNAME'])
+		self.ui.txtPassword.setText(self.settings['PANDORA_PASSWORD'])
+		self.ui.txtProxy.setText(self.settings['PANDORA_PROXY'])
+	
+	def saveSettings(self):
+		# load into settings
+		self.settings['PANDORA_USERNAME'] = self.ui.txtUsername.text()
+		self.settings['PANDORA_PASSWORD'] = self.ui.txtPassword.text()
+		self.settings['PANDORA_PROXY'] = self.ui.txtProxy.text()
+		
+		# store them
+		self.qsettings.setValue('pandora/username', self.settings['PANDORA_USERNAME'])
+		self.qsettings.setValue('pandora/password', self.settings['PANDORA_PASSWORD'])
+		self.qsettings.setValue('network/proxy', self.settings['PANDORA_PROXY'])
+	
+	def isUsernameAndPasswordSet(self):
+		if not ('PANDORA_USERNAME' in self.settings) and ('PANDORA_PASSWORD' in self.settings): return False
+		if not self.settings['PANDORA_USERNAME']: return False
+		if not self.settings['PANDORA_PASSWORD']: return False
+		return True
+	
+
+
+class MainForm(QDialog):
 	old_volume = 0.5
 	newSongBegan = Signal(dict)
 	
 	def __init__(self, parent=None):
-		super(Form, self).__init__(parent)
+		super(MainForm, self).__init__(parent)
 		
 		# call designer code
-		self.ui = main_ui.Ui_Dialog()
+		self.ui = pyside_main.Ui_Dialog()
 		self.ui.setupUi(self)
 		
 		# create model
@@ -108,6 +148,7 @@ class Form(QDialog):
 		self.ui.btnPlay.clicked.connect(self.playStop)
 		self.ui.btnNext.clicked.connect(self.next)
 		self.ui.btnMute.clicked.connect(self.mute)
+		self.ui.btnSettings.clicked.connect(self.settings)
 		self.ui.btnQuit.clicked.connect(self.quit)
 		self.ui.cbStations.currentIndexChanged[int].connect(self.switchStation)
 		self.newSongBegan.connect(self.newSongInternal)
@@ -117,16 +158,24 @@ class Form(QDialog):
 		self.initBass()
 	
 	def initPandora(self):
+		# load and check settings
+		cf = SettingsForm(self)
+		while not cf.isUsernameAndPasswordSet():
+			if cf.exec_() == 0:
+				sys.exit()
+		
 		# setup proxy
-		if config.PANDORA_PROXY:
-			proxy_support = urllib2.ProxyHandler({"http" : config.PANDORA_PROXY})
+		if cf.settings['PANDORA_PROXY']:
+			proxy_support = urllib2.ProxyHandler({"http" : cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		
 		# setup pandora
 		self.pandora = pandora.Pandora()
-		if not self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD):
-			raise ValueError("Wrong pandora credentials or proxy supplied")
+		while not self.pandora.authenticate(username=cf.settings['PANDORA_USERNAME'], password=cf.settings['PANDORA_PASSWORD']):
+			QMessageBox.critical(self, "Python Pandora", "Wrong pandora credentials or proxy supplied")
+			if cf.exec_() == 0:
+				sys.exit()
 		
 		# get station list
 		self.stationCache = self.pandora.getStationList()
@@ -171,7 +220,7 @@ class Form(QDialog):
 	
 	def newSong(self, song):
 		self.newSongBegan.emit(song)
-		
+	
 	def newSongInternal(self, song):
 		i = self.trackModel.addSong(song)
 		
@@ -180,15 +229,20 @@ class Form(QDialog):
 		self.ui.lstSongs.resizeRowToContents(1)
 		self.ui.lstSongs.resizeColumnsToContents()
 	
+	def settings(self):
+		f = SettingsForm(self)
+		f.open()
+	
 	def quit(self):
 		QApplication.exit()
 	
+
 
 if __name__ == '__main__':
     # Create the Qt Application
     app = QApplication(sys.argv)
     # Create and show the form
-    form = Form()
+    form = MainForm()
     form.show()
     # Run the main Qt loop
     sys.exit(app.exec_())

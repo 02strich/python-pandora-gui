@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main.ui'
+# Form implementation generated from reading ui file 'pyside_main.ui'
 #
-# Created: Tue Jul 12 15:49:08 2011
+# Created: Mon Jul 18 09:46:32 2011
 #      by: pyside-uic 0.2.11 running on PySide 1.0.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,6 +34,9 @@ class Ui_Dialog(object):
         self.cbStations = QtGui.QComboBox(Dialog)
         self.cbStations.setObjectName("cbStations")
         self.horizontalLayout.addWidget(self.cbStations)
+        self.btnSettings = QtGui.QToolButton(Dialog)
+        self.btnSettings.setObjectName("btnSettings")
+        self.horizontalLayout.addWidget(self.btnSettings)
         self.btnQuit = QtGui.QToolButton(Dialog)
         self.btnQuit.setObjectName("btnQuit")
         self.horizontalLayout.addWidget(self.btnQuit)
@@ -60,9 +63,10 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
+        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Python Pandora", None, QtGui.QApplication.UnicodeUTF8))
         self.btnPlay.setText(QtGui.QApplication.translate("Dialog", ">", None, QtGui.QApplication.UnicodeUTF8))
         self.btnNext.setText(QtGui.QApplication.translate("Dialog", ">>", None, QtGui.QApplication.UnicodeUTF8))
         self.btnMute.setText(QtGui.QApplication.translate("Dialog", "@", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSettings.setText(QtGui.QApplication.translate("Dialog", "S", None, QtGui.QApplication.UnicodeUTF8))
         self.btnQuit.setText(QtGui.QApplication.translate("Dialog", "Q", None, QtGui.QApplication.UnicodeUTF8))
 
