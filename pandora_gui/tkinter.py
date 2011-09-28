@@ -61,6 +61,7 @@ class Application(tk.Frame):
 	
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
+		
 		self.createWidgets()
 		self.initSettings()
 		self.initPandora()
@@ -75,6 +76,7 @@ class Application(tk.Frame):
 		self.columnconfigure(3, weight=1)
 		self.master.title("Pandora")
 		self.master.geometry("300x150")
+		self.master.iconbitmap('pandora.ico')
 		
 		# main buttons + station list
 		self.plStButton	= tk.Button(self, text='>', command=self.playStop)
