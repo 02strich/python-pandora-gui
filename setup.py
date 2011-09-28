@@ -2,29 +2,38 @@
 from setuptools import setup, find_packages
 import sys
 
-mainscript = 'pandora_gui/pyside.py'
+#mainscript = 'pandora_gui/pyside.py'
+mainscript = 'pandora_gui/tkinter.py'
 
 if sys.platform == 'darwin':
-	extra_options = dict(
-		setup_requires=['py2app'],
-		app=[mainscript],
-		# Cross-platform applications generally expect sys.argv to
-		# be used for opening files.
-		options = {"py2app":
-			{"frameworks": ['libbass.dylib'] },
-		},
-	)
+	try:
+		import py2app
+		extra_options = dict(
+			setup_requires=['py2app'],
+			app=[mainscript],
+			# Cross-platform applications generally expect sys.argv to
+			# be used for opening files.
+			options = {"py2app":
+				{"frameworks": ['libbass.dylib'] },
+			},
+		)
+	except ImportError:
+		extra_options = dict()
 elif sys.platform == 'win32':
-	extra_options = dict(
-		setup_requires=['py2exe'],
-		windows=[mainscript],
-		data_files = [('', ['bass.dll', 'config.ini'])],
-		options={ 
-			"py2exe":{
-				"optimize": 2,
-			}
-		},
-	)
+	try:
+		import py2exe
+		extra_options = dict(
+			setup_requires=['py2exe'],
+			windows=[mainscript],
+			data_files = [('', ['bass.dll', 'config.ini'])],
+			options={ 
+				"py2exe":{
+					"optimize": 2,
+				}
+			},	
+		)
+	except ImportError:
+		extra_options = dict()
 else:
 	extra_options = dict(
 		# Normally unix-like platforms will use "setup.py install"
