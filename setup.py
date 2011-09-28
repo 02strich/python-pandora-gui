@@ -42,7 +42,7 @@ else:
 	)
 
 setup(name='python-pandora-gui',
-	version='0.1',
+	version='0.2',
 	description='Simple, platform-independent GUI for pandora.com',
 	author='Stefan Richter',
 	author_email='stefan@02strich.de',
