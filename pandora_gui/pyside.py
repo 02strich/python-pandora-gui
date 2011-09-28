@@ -5,7 +5,7 @@ from PySide.QtGui import *
 import pyside_main, pyside_settings
 
 import pandora_gui.bass.pybass as bass
-from pandora_gui import config, worker
+from pandora_gui import worker
 
 import pandora
 from pandora.connection import AuthenticationError
@@ -154,27 +154,27 @@ class MainForm(QDialog):
 		self.newSongBegan.connect(self.newSongInternal)
 		
 		# other inits
+		self.cf = SettingsForm(self)
 		self.initPandora()
 		self.initBass()
 	
 	def initPandora(self):
-		# load and check settings
-		cf = SettingsForm(self)
-		while not cf.isUsernameAndPasswordSet():
-			if cf.exec_() == 0:
+		# check settings
+		while not self.cf.isUsernameAndPasswordSet():
+			if self.cf.exec_() == 0:
 				sys.exit()
 		
 		# setup proxy
-		if cf.settings['PANDORA_PROXY']:
-			proxy_support = urllib2.ProxyHandler({"http" : cf.settings['PANDORA_PROXY']})
+		if self.cf.settings['PANDORA_PROXY']:
+			proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		
 		# setup pandora
 		self.pandora = pandora.Pandora()
-		while not self.pandora.authenticate(username=cf.settings['PANDORA_USERNAME'], password=cf.settings['PANDORA_PASSWORD']):
+		while not self.pandora.authenticate(username=self.cf.settings['PANDORA_USERNAME'], password=self.cf.settings['PANDORA_PASSWORD']):
 			QMessageBox.critical(self, "Python Pandora", "Wrong pandora credentials or proxy supplied")
-			if cf.exec_() == 0:
+			if self.cf.exec_() == 0:
 				sys.exit()
 		
 		# get station list
@@ -208,7 +208,7 @@ class MainForm(QDialog):
 		try:
 			self.pandora.switchStation(station['stationId'])
 		except AuthenticationError:
-			self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
+			self.pandora.authenticate(username=self.cf.settings['PANDORA_USERNAME'], password=self.cf.settings['PANDORA_PASSWORD'])
 			self.pandora.switchStation(station['stationId'])
 	
 	def mute(self):

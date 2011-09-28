@@ -1,5 +1,4 @@
 import pandora_gui.bass.pybass as bass
-from pandora_gui import config
 
 from pandora.connection import AuthenticationError
 
@@ -22,7 +21,7 @@ class WorkerThread(threading.Thread):
 			try:
 				song = self.pandora.getNextSong()
 			except AuthenticationError:
-				self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
+				self.pandora.authenticate(username=app.config['PANDORA_USERNAME'], password=app.config['PANDORA_PASSWORD'])
 				song = self.pandora.getNextSong()
 			
 			# call app
