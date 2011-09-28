@@ -24,8 +24,8 @@ elif sys.platform == 'win32':
 		import py2exe
 		extra_options = dict(
 			setup_requires=['py2exe'],
-			windows=[mainscript],
-			data_files = [('', ['bass.dll', 'config.ini'])],
+			windows=[{'script': mainscript, 'icon_resources':  [(0, "pandora.ico")]}],
+			data_files = [('', ['bass.dll'])],
 			options={ 
 				"py2exe":{
 					"optimize": 2,
