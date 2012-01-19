@@ -1,4 +1,5 @@
 import Tkinter as tk
+import tkMessageBox
 root = tk.Tk()
 
 import pandora_gui.bass.pybass as bass
@@ -10,6 +11,7 @@ from pandora.connection import AuthenticationError
 import urllib2
 import threading
 import time
+import sys
 
 class WorkerThread(threading.Thread):
 	def __init__(self, app, pandora):
@@ -103,7 +105,8 @@ class Application(tk.Frame):
 		# setup pandora
 		self.pandora = pandora.Pandora()
 		if not self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD):
-			raise ValueError("Wrong pandora credentials or proxy supplied")
+			tkMessageBox.showerror("Pandora", "Wrong pandora credentials or proxy supplied")
+			sys.exit(1)
 		
 		# get station list
 		self.stationCache = self.pandora.getStationList()
@@ -142,6 +145,8 @@ class Application(tk.Frame):
 		except AuthenticationError:
 			self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
 			self.pandora.switchStation(stationId)
+		except Exception as e:
+			tkMessageBox.showerror("Pandora", "An error occured: %s" % e.message)
 	
 	def mute(self):
 		if bass.BASS_GetVolume() == 0.0:
