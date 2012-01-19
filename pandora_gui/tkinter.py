@@ -2,62 +2,58 @@ import Tkinter as tk
 import tkMessageBox
 root = tk.Tk()
 
+import tkMessageBox
+
+import ConfigParser
+import string
+import sys
+
 import pandora_gui.bass.pybass as bass
-from pandora_gui import config
+from pandora_gui import worker
 
 import pandora
 from pandora.connection import AuthenticationError
 
 import urllib2
-import threading
-import time
-import sys
+import tkSimpleDialog
 
-class WorkerThread(threading.Thread):
-	def __init__(self, app, pandora):
-		threading.Thread.__init__(self)
-		self.daemon  = True
-		self.app     = app
-		self.pandora = pandora
+class Settings(tkSimpleDialog.Dialog):
+	def body(self, master):
+		tk.Label(master, text="Username:").grid(row=0)
+		tk.Label(master, text="Password:").grid(row=1)
+		tk.Label(master, text="Proxy:").grid(row=2)
 		
-		self.stop    = False
-		self.next	 = False
+		self.username = tk.Entry(master)
+		self.username.grid(row=0, column=1)
+		
+		self.password = tk.Entry(master, show="*")
+		self.password.grid(row=1, column=1)
+		
+		self.proxy = tk.Entry(master)
+		self.proxy.grid(row=2, column=1)
+		
+		# initial focus
+		return self.username
 	
-	def run(self):
-		while not self.stop:
-			# get next song
-			try:
-				song = self.pandora.getNextSong()
-			except AuthenticationError:
-				self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
-				song = self.pandora.getNextSong()
-			
-			# call app
-			app.newSong(song)
-			
-			# create stream
-			handle = bass.BASS_StreamCreateURL(song['audioURL'], 0, bass.BASS_STREAM_AUTOFREE, bass.DOWNLOADPROC(), 0)
-			if handle == 0:
-				print bass.get_error_description(bass.BASS_ErrorGetCode())
-			
-			# play it
-			channel_length = bass.BASS_ChannelGetLength(handle, bass.BASS_POS_BYTE)
-			channel_position = bass.BASS_ChannelGetPosition(handle, bass.BASS_POS_BYTE)
-			if not bass.BASS_ChannelPlay(handle, False):
-				print bass.get_error_description(bass.BASS_ErrorGetCode())
-			
-			# wait for it to end
-			while (channel_position != -1) and (channel_position < channel_length):
-				# check whether we should continue
-				if self.stop or self.next:
-					bass.BASS_ChannelStop(handle)
-					self.next = False
-					break
-				
-				channel_position = bass.BASS_ChannelGetPosition(handle, bass.BASS_POS_BYTE)
-				time.sleep(1)
-			bass.BASS_StreamFree(handle)
-	
+	def apply(self):
+		# save settings to file
+		configParser = ConfigParser.SafeConfigParser()
+		configParser.add_section("pandora")
+		configParser.set("pandora", "username", self.username.get())
+		configParser.set("pandora", "password", self.password.get())
+		configParser.set("pandora", "proxy", self.proxy.get())
+		
+		# actually write file
+		with open('config.ini', 'w') as configfile:
+			configParser.write(configfile)
+		
+		# save settings into app
+		self.parent.config['PANDORA_USERNAME'] = self.username.get()
+		self.parent.config['PANDORA_PASSWORD'] = self.password.get()
+		self.parent.config['PANDORA_PROXY'] = self.proxy.get()
+		
+		# set return value
+		self.result = True
 
 class Application(tk.Frame):
 	station = tk.StringVar()
@@ -65,7 +61,9 @@ class Application(tk.Frame):
 	
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
+		
 		self.createWidgets()
+		self.initSettings()
 		self.initPandora()
 		self.initBass()
 	
@@ -78,6 +76,7 @@ class Application(tk.Frame):
 		self.columnconfigure(3, weight=1)
 		self.master.title("Pandora")
 		self.master.geometry("300x150")
+		self.master.iconbitmap('pandora.ico')
 		
 		# main buttons + station list
 		self.plStButton	= tk.Button(self, text='>', command=self.playStop)
@@ -95,18 +94,41 @@ class Application(tk.Frame):
 		self.quitButton.grid(row=0, column=4)
 		self.trackList.grid(sticky=tk.N+tk.S+tk.E+tk.W, row=1, column=0, columnspan=5)
 	
+	def initSettings(self):
+		# default settings
+		self.config = {
+			'PANDORA_PROXY': None,
+			'PANDORA_USERNAME': None,
+			'PANDORA_PASSWORD': None }
+		
+		# read settings from file
+		configParser = ConfigParser.SafeConfigParser()
+		configParser.read('config.ini')
+		for section in configParser.sections():
+			for option in configParser.options(section):
+				name = string.upper("%s_%s" % (section, option))
+				self.config[name] = configParser.get(section, option)
+		
+		# check settings
+		if self.config['PANDORA_USERNAME'] == None or self.config['PANDORA_PASSWORD'] == None:
+			if not self.showSettings():
+				sys.exit()
+	
 	def initPandora(self):
 		# setup proxy
-		if config.PANDORA_PROXY:
-			proxy_support = urllib2.ProxyHandler({"http" : config.PANDORA_PROXY})
+		if self.config['PANDORA_PROXY']:
+			proxy_support = urllib2.ProxyHandler({"http" : self.config['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		
 		# setup pandora
 		self.pandora = pandora.Pandora()
-		if not self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD):
-			tkMessageBox.showerror("Pandora", "Wrong pandora credentials or proxy supplied")
-			sys.exit(1)
+		if not self.pandora.authenticate(username=self.config['PANDORA_USERNAME'], password=self.config['PANDORA_PASSWORD']):
+			tkMessageBox.showerror("Pandora Player", "Wrong pandora credentials or proxy supplied")
+			if self.showSettings():
+				self.initPandora()
+			else:
+				sys.exit()
 		
 		# get station list
 		self.stationCache = self.pandora.getStationList()
@@ -120,13 +142,17 @@ class Application(tk.Frame):
 	def initBass(self):
 		bass.BASS_Init(-1, 44100, 0, 0, 0)
 	
+	def showSettings(self):
+		settingsDialog = Settings(self, "Settings")
+		return bool(settingsDialog.result)
+	
 	def next(self):
 		self.worker.next = True
 	
 	def playStop(self):
 		if self.plStButton['text'] == '>':
 			# play
-			self.worker = WorkerThread(self, self.pandora)
+			self.worker = worker.WorkerThread(self, self.pandora)
 			self.worker.start()
 			self.plStButton['text'] = "[]"
 		else:
