@@ -32,9 +32,20 @@ class Settings(tkSimpleDialog.Dialog):
 		self.proxy = tk.Entry(master)
 		self.proxy.grid(row=2, column=1)
 		
+		# load settings
+		self.load()
+		
 		# initial focus
 		return self.username
 	
+	def load(self):
+		configParser = ConfigParser.SafeConfigParser()
+		configParser.read('config.ini')
+		self.username.insert(0, configParser.get('pandora', 'username'))
+		self.password.insert(0, configParser.get('pandora', 'password'))
+		self.proxy.insert(0, configParser.get('pandora', 'proxy'))
+		
+
 	def apply(self):
 		# save settings to file
 		configParser = ConfigParser.SafeConfigParser()
