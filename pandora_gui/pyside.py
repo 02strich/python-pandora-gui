@@ -47,13 +47,13 @@ class TableModel(QAbstractTableModel):
 		
 		if role == Qt.DisplayRole:
 			if index.column() == 1:
-				result = "<b>%s</b><br/>by <b>%s</b> on <b>%s</b>" % (song['songTitle'], song['artistSummary'], song['albumTitle'])
+				result = "<b>%s</b><br/>by <b>%s</b> on <b>%s</b>" % (song['songName'], song['artistName'], song['albumName'])
 				return result
 		elif role == Qt.DecorationRole:
 			if index.column() == 0:
 				if not 'albumImage' in song:
 					# get data
-					u = urllib2.urlopen(song['artRadio'])
+					u = urllib2.urlopen(song['albumArtUrl'])
 					imageData = u.read()
 					u.close()
 					
@@ -178,7 +178,7 @@ class MainForm(QDialog):
 				sys.exit()
 		
 		# get station list
-		self.stationCache = self.pandora.getStationList()
+		self.stationCache = self.pandora.get_station_list()
 		for station in self.stationCache:
 			self.ui.cbStations.addItem(station['stationName'])
 	
@@ -206,10 +206,10 @@ class MainForm(QDialog):
 		station = self.stationCache[selectedIndex]
 		
 		try:
-			self.pandora.switchStation(station['stationId'])
+			self.pandora.switch_station(station['stationId'])
 		except AuthenticationError:
 			self.pandora.authenticate(username=self.cf.settings['PANDORA_USERNAME'], password=self.cf.settings['PANDORA_PASSWORD'])
-			self.pandora.switchStation(station['stationId'])
+			self.pandora.switch_station(station['stationId'])
 	
 	def mute(self):
 		if bass.BASS_GetVolume() == 0.0:

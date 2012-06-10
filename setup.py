@@ -42,21 +42,10 @@ else:
 	)
 
 setup(name='python-pandora-gui',
-	version='0.2',
+	version='0.3.0',
 	description='Simple, platform-independent GUI for pandora.com',
 	author='Stefan Richter',
 	author_email='stefan@02strich.de',
 	packages = find_packages(),
 	install_requires=['python-pandora'],
 	**extra_options)
-
-# patch library.zip
-if sys.argv[1] == 'py2exe':    
-    from pandora import get_pkg_data_files
-    import zipfile
-    
-    z = zipfile.ZipFile("dist/library.zip", "a")
-    for pandora_data in get_pkg_data_files():
-        z.write(pandora_data[1], 'pandora/'+pandora_data[0])
-    z.close()
-    

@@ -19,16 +19,16 @@ class WorkerThread(threading.Thread):
 		while not self.stop:
 			# get next song
 			try:
-				song = self.pandora.getNextSong()
+				song = self.pandora.get_next_song()
 			except AuthenticationError:
 				self.pandora.authenticate(username=app.config['PANDORA_USERNAME'], password=app.config['PANDORA_PASSWORD'])
-				song = self.pandora.getNextSong()
+				song = self.pandora.get_next_song()
 			
 			# call app
 			self.app.newSong(song)
 			
 			# create stream
-			handle = bass.BASS_StreamCreateURL(song['audioURL'], 0, bass.BASS_STREAM_AUTOFREE, bass.DOWNLOADPROC(), 0)
+			handle = bass.BASS_StreamCreateURL(song['additionalAudioUrl'], 0, bass.BASS_STREAM_AUTOFREE, bass.DOWNLOADPROC(), 0)
 			if handle == 0:
 				print bass.get_error_description(bass.BASS_ErrorGetCode())
 			

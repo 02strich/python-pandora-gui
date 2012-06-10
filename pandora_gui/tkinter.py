@@ -142,7 +142,7 @@ class Application(tk.Frame):
 				sys.exit()
 		
 		# get station list
-		self.stationCache = self.pandora.getStationList()
+		self.stationCache = self.pandora.get_station_list()
 		self.stationLst['menu'].delete(0, tk.END)
 		for station in self.stationCache:
 			self.stationLst['menu'].add_command(label=station['stationName'], command=lambda s=station: self.switchStation(s['stationName'], s['stationId']))
@@ -178,11 +178,12 @@ class Application(tk.Frame):
 		
 		# switch station online
 		try:
-			self.pandora.switchStation(stationId)
+			self.pandora.switch_station(stationId)
 		except AuthenticationError:
 			self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
-			self.pandora.switchStation(stationId)
+			self.pandora.switch_station(stationId)
 		except Exception as e:
+			print e
 			tkMessageBox.showerror("Pandora", "An error occured: %s" % e.message)
 	
 	def mute(self):
@@ -193,7 +194,7 @@ class Application(tk.Frame):
 			bass.BASS_SetVolume(0.0)
 	
 	def newSong(self, song):
-		self.trackList.insert(0, "%s (%s on %s)" % (song['songTitle'], song['artistSummary'], song['albumTitle']))
+		self.trackList.insert(0, "%s (%s on %s)" % (song['songName'], song['artistName'], song['albumName']))
 
 app = Application()
 app.mainloop()
