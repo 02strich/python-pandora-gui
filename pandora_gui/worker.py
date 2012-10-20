@@ -24,6 +24,10 @@ class WorkerThread(threading.Thread):
 				self.pandora.authenticate(username=app.config['PANDORA_USERNAME'], password=app.config['PANDORA_PASSWORD'])
 				song = self.pandora.get_next_song()
 			
+			# check for result
+			if not "additionalAudioUrl" in song:
+				continue
+			
 			# call app
 			self.app.newSong(song)
 			
