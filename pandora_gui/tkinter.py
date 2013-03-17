@@ -87,7 +87,10 @@ class Application(tk.Frame):
 		self.columnconfigure(3, weight=1)
 		self.master.title("Pandora")
 		self.master.geometry("300x150")
-		self.master.iconbitmap('pandora.ico')
+		try:
+			self.master.iconbitmap('pandora.ico')
+		except:
+			self.master.iconbitmap('@pandora.xbm')
 		
 		# main buttons + station list
 		self.plStButton	= tk.Button(self, text='>', command=self.playStop)

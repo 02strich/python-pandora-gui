@@ -65,7 +65,13 @@ elif platform.system().lower() == 'darwin':
 		bass_module = ctypes.CDLL('libbass.dylib')
 	func_type = ctypes.CFUNCTYPE
 else:
-	bass_module = ctypes.CDLL('bass')
+	try:
+		bass_module = ctypes.CDLL('./libbass32.so')
+	except:
+		try:
+			bass_module = ctypes.CDLL("./libbass64.so")
+		except:
+			bass_module = ctypes.CDLL("bass")
 	func_type = ctypes.CFUNCTYPE
 
 QWORD = ctypes.c_int64
