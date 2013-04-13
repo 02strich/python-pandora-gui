@@ -53,7 +53,10 @@ Main Features
   play samples/streams/musics in any 3D position, with EAX support
 '''
 
-import sys, ctypes, platform
+import ctypes
+import os.path
+import platform
+import sys
 
 if platform.system().lower() == 'windows':
 	bass_module = ctypes.WinDLL('bass')
@@ -66,10 +69,10 @@ elif platform.system().lower() == 'darwin':
 	func_type = ctypes.CFUNCTYPE
 else:
 	try:
-		bass_module = ctypes.CDLL('./libbass32.so')
+		bass_module = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'libbass32.so'))
 	except:
 		try:
-			bass_module = ctypes.CDLL("./libbass64.so")
+			bass_module = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'libbass64.so'))
 		except:
 			bass_module = ctypes.CDLL("bass")
 	func_type = ctypes.CFUNCTYPE
