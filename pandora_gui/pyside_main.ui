@@ -7,11 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>220</height>
+    <height>206</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Python Pandora</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../pandora.ico</normaloff>../pandora.ico</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing">
@@ -29,41 +33,54 @@
        </property>
        <item>
         <widget class="QToolButton" name="btnPlay">
-         <property name="text">
-          <string>&gt;</string>
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/control_play.png</normaloff>icons/control_play.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnPause">
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/control_pause.png</normaloff>icons/control_pause.png</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QToolButton" name="btnNext">
-         <property name="text">
-          <string>&gt;&gt;</string>
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/control_end.png</normaloff>icons/control_end.png</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QToolButton" name="btnMute">
-         <property name="text">
-          <string>@</string>
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/sound_mute.png</normaloff>icons/sound_mute.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnUnmute">
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/sound_none.png</normaloff>icons/sound_none.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnSettings">
+         <property name="icon">
+          <iconset>
+           <normaloff>icons/wrench.png</normaloff>icons/wrench.png</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QComboBox" name="cbStations"/>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btnSettings">
-         <property name="text">
-          <string>S</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btnQuit">
-         <property name="text">
-          <string>Q</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </item>

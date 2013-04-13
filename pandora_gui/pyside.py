@@ -132,27 +132,32 @@ class MainForm(QDialog):
 	
 	def __init__(self, parent=None):
 		super(MainForm, self).__init__(parent)
-		
+
 		# call designer code
 		self.ui = pyside_main.Ui_Dialog()
 		self.ui.setupUi(self)
-		
+
 		# create model
 		self.trackModel = TableModel(parent=self)
 		self.ui.lstSongs.setModel(self.trackModel)
-		
+
 		# configure more
 		self.ui.lstSongs.setItemDelegateForColumn(1, FormattedTextDelegate(self))
-		
+
+		# hide some icons
+		self.ui.btnPause.setVisible(False)
+		self.ui.btnUnmute.setVisible(False)
+
 		# connect events
-		self.ui.btnPlay.clicked.connect(self.playStop)
+		self.ui.btnPlay.clicked.connect(self.play)
+		self.ui.btnPause.clicked.connect(self.stop)
 		self.ui.btnNext.clicked.connect(self.next)
 		self.ui.btnMute.clicked.connect(self.mute)
+		self.ui.btnUnmute.clicked.connect(self.unmute)
 		self.ui.btnSettings.clicked.connect(self.settings)
-		self.ui.btnQuit.clicked.connect(self.quit)
 		self.ui.cbStations.currentIndexChanged[int].connect(self.switchStation)
 		self.newSongBegan.connect(self.newSongInternal)
-		
+
 		# other inits
 		self.cf = SettingsForm(self)
 		self.initPandora()
@@ -163,20 +168,20 @@ class MainForm(QDialog):
 		while not self.cf.isUsernameAndPasswordSet():
 			if self.cf.exec_() == 0:
 				sys.exit()
-		
+
 		# setup proxy
 		if self.cf.settings['PANDORA_PROXY']:
 			proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
-		
+
 		# setup pandora
 		self.pandora = pandora.Pandora()
 		while not self.pandora.authenticate(username=self.cf.settings['PANDORA_USERNAME'], password=self.cf.settings['PANDORA_PASSWORD']):
 			QMessageBox.critical(self, "Python Pandora", "Wrong pandora credentials or proxy supplied")
 			if self.cf.exec_() == 0:
 				sys.exit()
-		
+
 		# get station list
 		self.stationCache = self.pandora.get_station_list()
 		for station in self.stationCache:
@@ -189,22 +194,25 @@ class MainForm(QDialog):
 		if self.worker:
 			self.worker.next = True
 	
-	def playStop(self):
-		if self.ui.btnPlay.text() == '>':
-			# play
-			self.worker = worker.WorkerThread(self, self.pandora)
-			self.worker.start()
-			self.ui.btnPlay.setText("[]")
-		else:
-			#stop
-			self.worker.stop = True
-			self.worker.join()
-			self.ui.btnPlay.setText(">")
+	def play(self):
+		self.worker = worker.WorkerThread(self, self.pandora)
+		self.worker.start()
+
+		self.ui.btnPlay.setVisible(False)
+		self.ui.btnPause.setVisible(True)
+
+	def stop(self):
+		#stop
+		self.worker.stop = True
+		self.worker.join()
+
+		self.ui.btnPlay.setVisible(True)
+		self.ui.btnPause.setVisible(False)
 	
 	def switchStation(self, selectedIndex):
 		# switch station online
 		station = self.stationCache[selectedIndex]
-		
+
 		try:
 			self.pandora.switch_station(station['stationId'])
 		except AuthenticationError:
@@ -212,18 +220,24 @@ class MainForm(QDialog):
 			self.pandora.switch_station(station['stationId'])
 	
 	def mute(self):
-		if bass.BASS_GetVolume() == 0.0:
-			bass.BASS_SetVolume(self.old_volume)
-		else:
-			self.old_volume = bass.BASS_GetVolume()
-			bass.BASS_SetVolume(0.0)
+		self.old_volume = bass.BASS_GetVolume()
+		bass.BASS_SetVolume(0.0)
+
+		self.ui.btnMute.setVisible(False)
+		self.ui.btnUnmute.setVisible(True)
+
+	def unmute(self):
+		bass.BASS_SetVolume(self.old_volume)
+
+		self.ui.btnMute.setVisible(True)
+		self.ui.btnUnmute.setVisible(False)
 	
 	def newSong(self, song):
 		self.newSongBegan.emit(song)
 	
 	def newSongInternal(self, song):
 		i = self.trackModel.addSong(song)
-		
+
 		# resize stuff
 		self.ui.lstSongs.resizeRowToContents(0)
 		self.ui.lstSongs.resizeRowToContents(1)
@@ -232,10 +246,6 @@ class MainForm(QDialog):
 	def settings(self):
 		f = SettingsForm(self)
 		f.open()
-	
-	def quit(self):
-		QApplication.exit()
-	
 
 
 if __name__ == '__main__':
