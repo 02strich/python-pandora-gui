@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import Tkinter as tk
 import tkMessageBox
 root = tk.Tk()
@@ -90,7 +92,7 @@ class Application(tk.Frame):
 		try:
 			self.master.iconbitmap('pandora.ico')
 		except:
-			self.master.iconbitmap('@pandora.xbm')
+			self.master.iconbitmap('@../pandora.xbm')
 		
 		# main buttons + station list
 		self.plStButton	= tk.Button(self, text='>', command=self.playStop)
