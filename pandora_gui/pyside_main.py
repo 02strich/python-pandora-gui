@@ -7,6 +7,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+import os.path
+
 from PySide import QtCore, QtGui
 
 class Ui_Dialog(object):
@@ -27,37 +29,37 @@ class Ui_Dialog(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.btnPlay = QtGui.QToolButton(Dialog)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("icons/control_play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/control_play.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPlay.setIcon(icon1)
         self.btnPlay.setObjectName("btnPlay")
         self.horizontalLayout.addWidget(self.btnPlay)
         self.btnPause = QtGui.QToolButton(Dialog)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("icons/control_pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/control_pause.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPause.setIcon(icon2)
         self.btnPause.setObjectName("btnPause")
         self.horizontalLayout.addWidget(self.btnPause)
         self.btnNext = QtGui.QToolButton(Dialog)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap("icons/control_end.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/control_end.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnNext.setIcon(icon3)
         self.btnNext.setObjectName("btnNext")
         self.horizontalLayout.addWidget(self.btnNext)
         self.btnMute = QtGui.QToolButton(Dialog)
         icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap("icons/sound_mute.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon4.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/sound_mute.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMute.setIcon(icon4)
         self.btnMute.setObjectName("btnMute")
         self.horizontalLayout.addWidget(self.btnMute)
         self.btnUnmute = QtGui.QToolButton(Dialog)
         icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap("icons/sound_none.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon5.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/sound_none.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnUnmute.setIcon(icon5)
         self.btnUnmute.setObjectName("btnUnmute")
         self.horizontalLayout.addWidget(self.btnUnmute)
         self.btnSettings = QtGui.QToolButton(Dialog)
         icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap("icons/wrench.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon6.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons/wrench.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSettings.setIcon(icon6)
         self.btnSettings.setObjectName("btnSettings")
         self.horizontalLayout.addWidget(self.btnSettings)
