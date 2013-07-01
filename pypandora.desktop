@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=PyPandora
+Comment=This is my comment
+Exec=/home/stefan/Projects/prv/python-pandora-gui/pandora_gui/pyside.py
+Icon=/home/stefan/Projects/prv/python-pandora-gui/pandora.ico
+Terminal=true
+Type=Application
+Categories=Utility;Application;
