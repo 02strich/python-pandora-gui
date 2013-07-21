@@ -1,9 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import sys
+import os.path
+
 from PySide.QtCore import *
 from PySide.QtGui import *
 import pyside_main, pyside_settings
+
+try:
+	import pandora_gui
+except ImportError:
+	sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import pandora_gui.bass.pybass as bass
 from pandora_gui import worker
@@ -53,11 +61,14 @@ class TableModel(QAbstractTableModel):
 		elif role == Qt.DecorationRole:
 			if index.column() == 0:
 				if not 'albumImage' in song:
-					# get data
-					u = urllib2.urlopen(song['albumArtUrl'])
-					imageData = u.read()
-					u.close()
-					
+					if song['albumArtUrl']:
+						# get data
+						u = urllib2.urlopen(song['albumArtUrl'])
+						imageData = u.read()
+						u.close()
+					else:
+						imageData = None
+
 					# get it into qt
 					bytearr = QByteArray(imageData)
 					imagen = QImage()
@@ -66,7 +77,6 @@ class TableModel(QAbstractTableModel):
 					song['albumImage'] = imagen
 				return song['albumImage']
 		return None
-		
 	
 
 class FormattedTextDelegate(QStyledItemDelegate):
@@ -172,7 +182,7 @@ class MainForm(QDialog):
 
 		# setup proxy
 		if self.cf.settings['PANDORA_PROXY']:
-			proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY']})
+			proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY'], 'https': self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 
@@ -184,8 +194,7 @@ class MainForm(QDialog):
 				sys.exit()
 
 		# get station list
-		self.stationCache = self.pandora.get_station_list()
-		for station in self.stationCache:
+		for station in self.pandora.stations:
 			self.ui.cbStations.addItem(station['stationName'])
 	
 	def initBass(self):
@@ -212,13 +221,13 @@ class MainForm(QDialog):
 	
 	def switchStation(self, selectedIndex):
 		# switch station online
-		station = self.stationCache[selectedIndex]
+		station = self.pandora.stations[selectedIndex]
 
 		try:
-			self.pandora.switch_station(station['stationId'])
+			self.pandora.switch_station(station)
 		except AuthenticationError:
 			self.pandora.authenticate(username=self.cf.settings['PANDORA_USERNAME'], password=self.cf.settings['PANDORA_PASSWORD'])
-			self.pandora.switch_station(station['stationId'])
+			self.pandora.switch_station(station)
 	
 	def mute(self):
 		self.old_volume = bass.BASS_GetVolume()
