@@ -136,7 +136,7 @@ class Application(tk.Frame):
 			if self.cf.settings['PANDORA_PROXY'].startswith("gae://") or self.cf.settings['PANDORA_PROXY'].startswith('gaes://'):
 				proxy_support = GoProxyHandler("http" + self.cf.settings['PANDORA_PROXY'][3:])
 			else:
-				proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY']})
+				proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY'], 'https': self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		
