@@ -19,6 +19,8 @@ from pandora_gui import worker
 import pandora
 from pandora.connection import AuthenticationError
 
+from go_gae_proxy import GoProxyHandler
+
 import urllib2
 
 class TableModel(QAbstractTableModel):
@@ -182,7 +184,10 @@ class MainForm(QDialog):
 
 		# setup proxy
 		if self.cf.settings['PANDORA_PROXY']:
-			proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY'], 'https': self.cf.settings['PANDORA_PROXY']})
+			if self.cf.settings['PANDORA_PROXY'].startswith("gae://") or self.cf.settings['PANDORA_PROXY'].startswith('gaes://'):
+				proxy_support = GoProxyHandler("http" + self.cf.settings['PANDORA_PROXY'][3:])
+			else:
+				proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY'], 'https': self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 

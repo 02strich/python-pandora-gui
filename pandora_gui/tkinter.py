@@ -133,7 +133,10 @@ class Application(tk.Frame):
 	def initPandora(self):
 		# setup proxy
 		if self.config['PANDORA_PROXY']:
-			proxy_support = urllib2.ProxyHandler({"http" : self.config['PANDORA_PROXY']})
+			if self.cf.settings['PANDORA_PROXY'].startswith("gae://") or self.cf.settings['PANDORA_PROXY'].startswith('gaes://'):
+				proxy_support = GoProxyHandler("http" + self.cf.settings['PANDORA_PROXY'][3:])
+			else:
+				proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		

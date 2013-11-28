@@ -42,10 +42,10 @@ else:
 	)
 
 setup(name='python-pandora-gui',
-	version='0.3.0',
+	version='0.3.1',
 	description='Simple, platform-independent GUI for pandora.com',
 	author='Stefan Richter',
 	author_email='stefan@02strich.de',
 	packages = find_packages(),
-	install_requires=['python-pandora'],
+	install_requires=['python-pandora', 'go-proxy-client'],
 	**extra_options)
