@@ -16,6 +16,8 @@ from pandora_gui import worker
 import pandora
 from pandora.connection import AuthenticationError
 
+from go_gae_proxy import GoProxyHandler
+
 import urllib2
 import tkSimpleDialog
 
@@ -133,10 +135,10 @@ class Application(tk.Frame):
 	def initPandora(self):
 		# setup proxy
 		if self.config['PANDORA_PROXY']:
-			if self.cf.settings['PANDORA_PROXY'].startswith("gae://") or self.cf.settings['PANDORA_PROXY'].startswith('gaes://'):
-				proxy_support = GoProxyHandler("http" + self.cf.settings['PANDORA_PROXY'][3:])
+			if self.config['PANDORA_PROXY'].startswith("gae://") or self.config['PANDORA_PROXY'].startswith('gaes://'):
+				proxy_support = GoProxyHandler("http" + self.config['PANDORA_PROXY'][3:])
 			else:
-				proxy_support = urllib2.ProxyHandler({"http" : self.cf.settings['PANDORA_PROXY'], 'https': self.cf.settings['PANDORA_PROXY']})
+				proxy_support = urllib2.ProxyHandler({"http" : self.config['PANDORA_PROXY'], 'https': self.config['PANDORA_PROXY']})
 			opener = urllib2.build_opener(proxy_support)
 			urllib2.install_opener(opener)
 		
@@ -150,13 +152,12 @@ class Application(tk.Frame):
 				sys.exit()
 		
 		# get station list
-		self.stationCache = self.pandora.get_station_list()
 		self.stationLst['menu'].delete(0, tk.END)
-		for station in self.stationCache:
-			self.stationLst['menu'].add_command(label=station['stationName'], command=lambda s=station: self.switchStation(s['stationName'], s['stationId']))
+		for station in self.pandora.stations:
+			self.stationLst['menu'].add_command(label=station['stationName'], command=lambda s=station: self.switchStation(s))
 		
 		# switch to first station
-		self.switchStation(self.stationCache[0]['stationName'], self.stationCache[0]['stationId'])
+		self.switchStation(self.pandora.stations[0])
 	
 	def initBass(self):
 		bass.BASS_Init(-1, 44100, 0, 0, 0)
@@ -180,18 +181,17 @@ class Application(tk.Frame):
 			self.worker.join()
 			self.plStButton['text'] = ">"
 		
-	def switchStation(self, stationName, stationId):
+	def switchStation(self, station):
 		# set value
-		self.stationLst.setvar(self.stationLst.cget("textvariable"), value=stationName)
+		self.stationLst.setvar(self.stationLst.cget("textvariable"), value=station['stationName'])
 		
 		# switch station online
 		try:
-			self.pandora.switch_station(stationId)
+			self.pandora.switch_station(station)
 		except AuthenticationError:
 			self.pandora.authenticate(username=config.PANDORA_USERNAME, password=config.PANDORA_PASSWORD)
-			self.pandora.switch_station(stationId)
+			self.pandora.switch_station(station)
 		except Exception as e:
-			print e
 			tkMessageBox.showerror("Pandora", "An error occured: %s" % e.message)
 	
 	def mute(self):
